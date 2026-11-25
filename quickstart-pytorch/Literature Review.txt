@@ -1,0 +1,117 @@
+1. FedScale (Lai et al., 2022)
+FedScale: Benchmarking Model and System Performance of Federated Learning at Scale.
+
+Main idea to reference:
+
+Client computational heterogeneity should be represented using measured execution performance, independently of the amount of local data. Computation, communication and availability are distinct system characteristics and should be modeled separately.
+
+How we will use it:
+- Benchmark clients using a fixed workload to compare their computational capabilities.
+- Separate hardware performance from local dataset size.
+- Keep computation, communication and availability as separate resource dimensions.
+2. Oort (Lai et al., 2021)
+Oort: Efficient Federated Learning via Guided Participant Selection.
+
+Main idea to reference:
+
+Efficient client selection should balance system efficiency (client training speed) with statistical efficiency (the usefulness of clients' data). Selecting only the fastest clients can neglect valuable data and reduce learning efficiency.
+
+How we will use it:
+- Compare fastest-client selection with a resource-aware strategy.
+- Consider the trade-off between training speed and learning performance.
+- Monitor client participation frequency to identify systematic exclusion of slower clients.
+3. FedCS (Nishio & Yonetani, 2019)
+Client Selection for Federated Learning with Heterogeneous Resources in Mobile Edge.
+
+Main idea to reference:
+
+Client selection can account for heterogeneous computational and communication capabilities by estimating the time required for clients to complete their local training and communication within a round deadline.
+
+How we will use it:
+- Use client-specific computational performance to estimate training duration.
+- Consider local workload size when estimating actual completion time.
+- Use resource constraints as criteria for selecting clients, rather than relying only on random selection.
+
+Consolidated methodology
+What each paper contributes to our research
+1. FedScale — How to measure heterogeneity
+   
+   Measure computational performance independently of workload size and distinguish resource dimensions.
+2. Oort — Why selection must balance objectives
+   
+   Balance client speed with the usefulness of local data, while considering participation fairness.
+3. FedCS — How to account for resource constraints
+   
+   Estimate client completion time using computational capability and local workload when making selection decisions.
+
+
+   ########
+   ## Edge Device Profiles and Resource Characterization
+
+### Motivation
+
+Federated Learning (FL) systems commonly involve clients with heterogeneous computational and communication capabilities. In practical edge environments, participating devices may differ in their processing architectures, number of CPU cores, memory capacity, accelerator availability, and network connectivity. These differences can affect local model-training time and the overall execution time of federated learning rounds.
+
+Several studies have investigated the impact of system heterogeneity on FL performance and client selection. Nishio and Yonetani (2019) introduced FedCS, a resource-aware client-selection approach that considers the computational and communication conditions of mobile edge devices. Chai et al. (2020) proposed TiFL, which groups clients into performance-based tiers to mitigate the impact of slow clients, commonly referred to as stragglers. Similarly, Lai et al. (2021), in Oort, proposed guided participant selection that considers both the computational capabilities of clients and the potential utility of their local data.
+
+Motivated by these works, this project considers a heterogeneous group of edge-device profiles to study resource-aware client selection.
+
+### Selected Hardware Profiles
+
+Five representative embedded platforms were selected to cover a range of computational capabilities, from CPU-oriented single-board computers to embedded systems equipped with NVIDIA GPUs.
+
+**Client 0 – Raspberry Pi 4 Model B**
+
+The Raspberry Pi 4 Model B represents a compact, general-purpose edge device with CPU-based processing capabilities. Its main specifications include a quad-core ARM Cortex-A72 processor operating at 1.8 GHz and 4 GB of LPDDR4 memory for the selected configuration. It provides Gigabit Ethernet and dual-band 802.11ac wireless connectivity. Its VideoCore VI GPU is intended primarily for graphics and multimedia workloads and is not a CUDA-capable NVIDIA accelerator.
+
+**Client 1 – Raspberry Pi 5**
+
+The Raspberry Pi 5 represents a more recent generation of the Raspberry Pi platform. The selected configuration includes a quad-core 64-bit ARM Cortex-A76 processor operating at 2.4 GHz and 8 GB of LPDDR4X memory. It integrates a VideoCore VII GPU and provides Gigabit Ethernet and dual-band 802.11ac wireless connectivity. Like the Raspberry Pi 4, it is considered a CPU-oriented platform for the purposes of this CUDA-based deep-learning experiment.
+
+**Client 2 – NVIDIA Jetson Nano 4GB**
+
+The Jetson Nano represents an entry-level embedded AI platform. It features a quad-core ARM Cortex-A57 CPU, 4 GB of LPDDR4 memory, and an NVIDIA Maxwell GPU with 128 CUDA cores. Its hardware acceleration capabilities make it suitable for investigating deep-learning workloads on resource-constrained embedded systems.
+
+**Client 3 – NVIDIA Jetson Xavier NX 8GB**
+
+The Jetson Xavier NX represents a higher-performance embedded AI platform. Its 8 GB configuration includes a six-core NVIDIA Carmel ARMv8.2 CPU and a 384-core NVIDIA Volta GPU with 48 Tensor Cores. NVIDIA specifies an AI performance of up to 21 TOPS for this platform. It also provides Gigabit Ethernet connectivity.
+
+**Client 4 – NVIDIA Jetson Orin Nano Super Developer Kit 8GB**
+
+The Jetson Orin Nano Super represents a more recent embedded AI platform based on NVIDIA's Ampere architecture. Its specifications include a six-core ARM Cortex-A78AE CPU, an NVIDIA Ampere GPU with 1,024 CUDA cores and 32 Tensor Cores, and 8 GB of LPDDR5 memory with a bandwidth of 102 GB/s. NVIDIA specifies an AI performance of up to 67 INT8 TOPS for the Super configuration.
+
+### Summary of Hardware Profiles
+
+| Client | Device | CPU | Memory | GPU / Accelerator |
+|---|---|---|---|---|
+| C0 | Raspberry Pi 4 Model B | 4-core Cortex-A72, 1.8 GHz | 4 GB LPDDR4 | VideoCore VI |
+| C1 | Raspberry Pi 5 | 4-core Cortex-A76, 2.4 GHz | 8 GB LPDDR4X | VideoCore VII |
+| C2 | Jetson Nano 4GB | 4-core Cortex-A57 | 4 GB LPDDR4 | 128-core Maxwell GPU |
+| C3 | Jetson Xavier NX 8GB | 6-core Carmel ARMv8.2 | 8 GB LPDDR4X | 384-core Volta GPU, 48 Tensor Cores |
+| C4 | Jetson Orin Nano Super 8GB | 6-core Cortex-A78AE | 8 GB LPDDR5 | 1,024-core Ampere GPU, 32 Tensor Cores |
+
+### Resource Representation and Limitations
+
+The selected profiles are used as hardware metadata associated with the simulated clients. They describe the reference computational environments that the client-selection algorithm is intended to consider. The metadata includes processor architecture, CPU core count, memory capacity, accelerator type, accelerator availability, and network-interface capabilities.
+
+For GPU memory, a separate dedicated VRAM value is not specified in these profiles because the Jetson platforms use shared system memory architectures. The available system memory is therefore recorded as the device's main memory rather than as a separate dedicated VRAM capacity.
+
+For network connectivity, Gigabit Ethernet is recorded as an interface capability where supported. It should not be interpreted as a measured or guaranteed data-transfer throughput.
+
+Importantly, hardware specifications such as CPU frequency, CUDA core count, and theoretical AI performance (TOPS) are not directly interchangeable measures of deep-learning training speed. Actual performance depends on the workload, software framework, hardware utilization, memory constraints, and other system conditions. Consequently, hardware specifications provide a descriptive resource profile, whereas measured execution time is needed to characterize the actual training performance of a client.
+
+In the initial experimental environment, the five clients are simulated on a shared physical machine. The hardware profiles therefore do not correspond to five independently executing physical devices, and they do not reproduce the real computational heterogeneity of the selected platforms. This setup is intended to develop and test the client-selection logic. Experiments on separate physical devices would be required to validate the effect of actual hardware heterogeneity.
+
+### References
+
+- Chai, Z., Ali, A., Zawad, S., Truex, S., Anwar, A., Baracaldo, N., Zhou, Y., Ludwig, H., Yan, F., & Cheng, Y. (2020). *TiFL: A Tier-based Federated Learning System*. Proceedings of the 29th International Symposium on High-Performance Parallel and Distributed Computing (HPDC).
+- Lai, F., Zhu, X., Madhyastha, H. V., & Chowdhury, M. (2021). *Oort: Efficient Federated Learning via Guided Participant Selection*. 15th USENIX Symposium on Operating Systems Design and Implementation (OSDI).
+- Nishio, T., & Yonetani, R. (2019). *Client Selection for Federated Learning with Heterogeneous Resources in Mobile Edge*. IEEE International Conference on Communications (ICC).
+
+### Manufacturer Documentation
+
+- Raspberry Pi Ltd. *Raspberry Pi 4 Model B – Product Specifications*.
+- Raspberry Pi Ltd. *Raspberry Pi 5 – Product Specifications*.
+- NVIDIA. *Jetson Nano – Technical Specifications*.
+- NVIDIA. *Jetson Xavier NX – Technical Specifications*.
+- NVIDIA. *Jetson Orin Nano Super Developer Kit – Technical Specifications*.
